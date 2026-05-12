@@ -222,44 +222,6 @@ let currentRoomCode = null;
 const flipSound = new Audio('https://www.soundjay.com/misc/sounds/page-flip-01a.mp3');
 flipSound.volume = 0.5;
 
-let isMusicPlaying = false;
-
-function toggleMusic() {
-    const btn = document.getElementById('music-toggle');
-    const bgMusic = document.getElementById('bg-music');
-    
-    if (!bgMusic) return;
-
-    if (!isMusicPlaying) {
-        bgMusic.volume = 0.3;
-        const playPromise = bgMusic.play();
-        
-        if (playPromise !== undefined) {
-            playPromise.then(() => {
-                isMusicPlaying = true;
-                btn.classList.add('active');
-                btn.innerText = '🎵';
-            }).catch(e => {
-                console.error("Playback failed:", e);
-                // If the first one fails, try an alternate stable URL
-                bgMusic.src = 'https://www.chosic.com/wp-content/uploads/2021/07/Backbay-Lounge.mp3';
-                bgMusic.play().then(() => {
-                    isMusicPlaying = true;
-                    btn.classList.add('active');
-                    btn.innerText = '🎵';
-                }).catch(err => {
-                    alert("Browser blocked audio. Please click any button on the screen first, then try the music toggle again!");
-                });
-            });
-        }
-    } else {
-        bgMusic.pause();
-        isMusicPlaying = false;
-        btn.classList.remove('active');
-        btn.innerText = '🔇';
-    }
-}
-
 function triggerEffects() {
     // Sound
     flipSound.currentTime = 0;
