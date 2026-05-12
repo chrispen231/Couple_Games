@@ -214,8 +214,8 @@ function nextItem() {
     const nextFace = isFlipped ? document.getElementById('card-content') : document.getElementById('card-content-back');
     
     let content = '';
-    const player = players[currentPlayerIndex];
-    const partner = players[1 - currentPlayerIndex];
+    const player = `<strong>${players[currentPlayerIndex]}</strong>`;
+    const partner = `<strong>${players[1 - currentPlayerIndex]}</strong>`;
 
     if (typeof item === 'object') {
         let text = item.text.replace(/me/g, partner).replace(/I/g, partner);
