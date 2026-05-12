@@ -213,17 +213,17 @@ function nextItem() {
     const isFlipped = card.classList.contains('is-flipped');
     const nextFace = isFlipped ? document.getElementById('card-content') : document.getElementById('card-content-back');
     let content = '';
-    const player = `<strong>${players[currentPlayerIndex]}</strong>`;
-    const partner = `<strong>${players[1 - currentPlayerIndex]}</strong>`;
+    const player = players[currentPlayerIndex];
+    const partner = players[1 - currentPlayerIndex];
 
     if (typeof item === 'object') {
-        // Personalize Truth or Dare: "(Name) Truth/Dare: Question"
+        // Personalize Truth or Dare
         let text = item.text.replace(/me/g, partner).replace(/I/g, partner);
-        content = `(${player}) <span style="color: var(--primary-red); font-weight: bold;">${item.type}:</span><br>${text}`;
+        content = `<span style="color: var(--primary-red); font-weight: bold;">${item.type}:</span><br>${text}`;
     } else {
-        // Personalize others: "(Name) Question"
+        // General replacement for strings
         let text = item.replace(/{player}/g, player).replace(/{partner}/g, partner);
-        content = `(${player}) ${text}`;
+        content = text;
     }
     
     nextFace.innerHTML = content;
