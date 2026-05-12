@@ -250,7 +250,7 @@ document.getElementById('next-btn').addEventListener('click', nextItem);
 function updateTurnIndicator() {
     const indicator = document.getElementById('turn-indicator');
     if (indicator) {
-        indicator.innerText = `${players[currentPlayerIndex]}'s Turn`;
+        indicator.innerText = `${players[currentPlayerIndex]}'s turn to answer`;
     }
 }
 
