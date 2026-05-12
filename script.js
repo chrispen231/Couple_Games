@@ -219,26 +219,33 @@ let isMultiplayer = false;
 let currentRoomCode = null;
 
 // Audio and Haptics
-const flipSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-card-flip-607.mp3');
+const flipSound = new Audio('https://www.soundjay.com/misc/sounds/page-flip-01a.mp3');
 flipSound.volume = 0.5;
 
-const bgMusic = new Audio('https://upload.wikimedia.org/wikipedia/commons/5/5e/Backbay_Lounge_%28ISRC_USUAN1700068%29.mp3');
+// Using a high-quality, stable URL for the romantic jazz
+const bgMusic = new Audio('https://www.chosic.com/wp-content/uploads/2021/07/Backbay-Lounge.mp3');
 bgMusic.loop = true;
 bgMusic.volume = 0.3;
 let isMusicPlaying = false;
 
 function toggleMusic() {
     const btn = document.getElementById('music-toggle');
-    if (isMusicPlaying) {
+    if (!isMusicPlaying) {
+        // Try to play
+        bgMusic.play().then(() => {
+            isMusicPlaying = true;
+            btn.classList.add('active');
+            btn.innerText = '🎵';
+        }).catch(e => {
+            console.error("Playback failed:", e);
+            alert("Please click anywhere on the page first, then try the music button again!");
+        });
+    } else {
         bgMusic.pause();
+        isMusicPlaying = false;
         btn.classList.remove('active');
         btn.innerText = '🔇';
-    } else {
-        bgMusic.play().catch(e => console.log("Music play blocked until interaction"));
-        btn.classList.add('active');
-        btn.innerText = '🎵';
     }
-    isMusicPlaying = !isMusicPlaying;
 }
 
 function triggerEffects() {
