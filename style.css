@@ -8,6 +8,56 @@
     --transition: all 0.3s ease;
 }
 
+/* Global Dark Mode */
+body.dark-mode {
+    --cream: #121212;
+    --deep-charcoal: #e0e0e0;
+    background-color: var(--cream);
+    color: var(--deep-charcoal);
+}
+
+body.dark-mode .player-setup, 
+body.dark-mode .game-card, 
+body.dark-mode .card-face {
+    background: #1e1e1e;
+    border-color: #333;
+}
+
+body.dark-mode .input-group input {
+    background: #333;
+    color: white;
+    border-color: #444;
+}
+
+body.dark-mode .mode-selector {
+    background: #222;
+}
+
+body.dark-mode .mode-btn.active {
+    background: #333;
+    color: var(--primary-red);
+}
+
+.icon-btn {
+    background: white;
+    border: 2px solid #eee;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: var(--transition);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.icon-btn:hover {
+    border-color: var(--primary-red);
+    transform: scale(1.1);
+}
+
 * {
     margin: 0;
     padding: 0;
