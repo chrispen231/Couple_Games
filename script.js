@@ -53,16 +53,16 @@ const gameData = {
     'never-have-i-ever': {
         title: 'Never Have I Ever',
         normal: [
-            'Never have I ever stalked an ex on social media.',
-            'Never have I ever lied about my age.',
-            'Never have I ever had a crush on a coworker.',
-            'Never have I ever forgotten an anniversary.',
-            'Never have I ever pretended to be sick to avoid a date.',
-            'Never have I ever snooped through a partner\'s phone.',
-            'Never have I ever sent a risky text to the wrong person.',
-            'Never have I ever regifted something from an ex.',
-            'Never have I ever cried during a romantic movie.',
-            'Never have I ever fallen in love at first sight.'
+            'Never have I ever stalked {partner}\'s ex on social media.',
+            'Never have I ever lied to {partner} about my age.',
+            'Never have I ever had a crush on {partner}\'s coworker.',
+            'Never have I ever forgotten our anniversary.',
+            'Never have I ever pretended to be sick to avoid a date with {partner}.',
+            'Never have I ever snooped through {partner}\'s phone.',
+            'Never have I ever sent a risky text to {partner} by accident.',
+            'Never have I ever regifted something from an ex to {partner}.',
+            'Never have I ever cried during a movie with {partner}.',
+            'Never have I ever fallen in love with {partner} at first sight.'
         ],
         funny: [
             'Never have I ever laughed so hard I peed a little.',
@@ -209,8 +209,128 @@ let currentView = 'menu-view';
 let currentGame = null;
 let currentMode = 'normal';
 let gameHistory = {};
+let players = ['Player 1', 'Player 2'];
+let currentPlayerIndex = 0;
 
-function setMode(mode) {
+// Supabase Multiplayer Logic
+let supabaseClient = null;
+let roomChannel = null;
+let isMultiplayer = false;
+let currentRoomCode = null;
+
+const SUPABASE_URL = 'https://xysufyfzscripnkozsfa.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5c3VmeWZ6c2NyaXBua296c2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MzQzMDEsImV4cCI6MjA5NDExMDMwMX0.-lEabpLCOHVJFIyn-NsznVWwSB2K2TTCGKEvqhBVqes';
+
+function initSupabase() {
+    if (SUPABASE_URL === 'YOUR_SUPABASE_URL') return;
+    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+}
+
+function toggleMultiplayer(enabled) {
+    isMultiplayer = enabled;
+    document.getElementById('offline-options').style.display = enabled ? 'none' : 'block';
+    document.getElementById('online-options').style.display = enabled ? 'block' : 'none';
+    
+    if (enabled && !supabaseClient) {
+        initSupabase();
+    }
+}
+
+async function createRoom() {
+    if (!supabaseClient) return alert('Please configure Supabase URL and Key first!');
+    
+    const code = Math.random().toString(36).substring(2, 6).toUpperCase();
+    currentRoomCode = code;
+    
+    joinChannel(code);
+    
+    document.getElementById('display-room-code').innerText = code;
+    document.getElementById('room-info').style.display = 'block';
+    document.getElementById('create-room-box').style.display = 'none';
+    document.getElementById('join-room-box').style.display = 'none';
+}
+
+function joinRoom() {
+    if (!supabaseClient) return alert('Please configure Supabase URL and Key first!');
+    
+    const code = document.getElementById('room-code-input').value.trim().toUpperCase();
+    if (code.length !== 4) return alert('Enter a 4-digit code');
+    
+    currentRoomCode = code;
+    joinChannel(code);
+    
+    document.getElementById('display-room-code').innerText = code;
+    document.getElementById('room-info').style.display = 'block';
+    document.getElementById('create-room-box').style.display = 'none';
+    document.getElementById('join-room-box').style.display = 'none';
+}
+
+function joinChannel(code) {
+    if (roomChannel) supabaseClient.removeChannel(roomChannel);
+    
+    roomChannel = supabaseClient.channel(`room-${code}`, {
+        config: { broadcast: { self: true } }
+    });
+
+    roomChannel
+        .on('broadcast', { event: 'game-state' }, (payload) => {
+            syncGameState(payload.payload);
+        })
+        .on('presence', { event: 'sync' }, () => {
+            const state = roomChannel.presenceState();
+            const count = Object.keys(state).length;
+            document.getElementById('connection-status').innerText = count > 1 ? 'Partner Connected!' : 'Waiting for partner...';
+        })
+        .subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+                await roomChannel.track({ user: 'player', joined_at: new Date().toISOString() });
+            }
+        });
+}
+
+function syncGameState(state) {
+    currentGame = state.gameKey;
+    currentMode = state.mode;
+    players = state.players;
+    currentPlayerIndex = state.turn;
+    
+    setMode(state.mode, false);
+    
+    const game = gameData[currentGame];
+    document.getElementById('game-title').innerText = game.title;
+    updateTurnIndicator();
+    
+    // Determine which face to update based on current flip state
+    const card = document.getElementById('card-display');
+    const isFlipped = card.classList.contains('is-flipped');
+    const nextFace = isFlipped ? document.getElementById('card-content') : document.getElementById('card-content-back');
+    
+    nextFace.innerHTML = state.cardContent;
+    card.classList.toggle('is-flipped');
+
+    if (currentView !== 'play-view') {
+        showView('play-view');
+    }
+}
+
+function broadcastState(cardContent) {
+    if (!isMultiplayer || !roomChannel) return;
+    
+    roomChannel.send({
+        type: 'broadcast',
+        event: 'game-state',
+        payload: {
+            gameKey: currentGame,
+            mode: currentMode,
+            players: players,
+            turn: currentPlayerIndex,
+            cardContent: cardContent
+        }
+    });
+}
+
+// Update existing functions to support multiplayer
+function setMode(mode, broadcast = true) {
     currentMode = mode;
     
     // Clear all mode classes
@@ -233,36 +353,27 @@ function setMode(mode) {
     
     document.getElementById(modeBtnMap[mode]).classList.add('active');
     
-    // If a game is active, refresh the card to the new mode's content
-    if (currentGame) {
+    // If a game is active and we are in local or broadcasting is requested
+    if (currentGame && broadcast) {
         nextItem();
     }
 }
 
 function startGame(gameKey) {
+    // Get names from inputs
+    const p1 = document.getElementById('p1-name').value.trim() || 'Player 1';
+    const p2 = document.getElementById('p2-name').value.trim() || 'Player 2';
+    players = [p1, p2];
+    
+    currentPlayerIndex = Math.floor(Math.random() * 2);
+
     currentGame = gameKey;
     const game = gameData[gameKey];
     
     document.getElementById('game-title').innerText = game.title;
+    updateTurnIndicator();
     showView('play-view');
     nextItem();
-}
-
-function showMenu() {
-    showView('menu-view');
-    currentGame = null;
-}
-
-function showView(viewId) {
-    document.getElementById(currentView).classList.remove('active');
-    setTimeout(() => {
-        document.getElementById(currentView).style.display = 'none';
-        document.getElementById(viewId).style.display = 'block';
-        setTimeout(() => {
-            document.getElementById(viewId).classList.add('active');
-            currentView = viewId;
-        }, 50);
-    }, 300);
 }
 
 function nextItem() {
@@ -289,20 +400,65 @@ function nextItem() {
     
     const item = items[randomIndex];
     
-    const display = document.getElementById('card-content');
-    display.style.opacity = 0;
+    const card = document.getElementById('card-display');
+    const isFlipped = card.classList.contains('is-flipped');
+    const nextFace = isFlipped ? document.getElementById('card-content') : document.getElementById('card-content-back');
     
-    setTimeout(() => {
-        if (typeof item === 'object') {
-            display.innerHTML = `<span style="color: var(--primary-red); font-weight: bold;">${item.type}:</span><br>${item.text}`;
-        } else {
-            display.innerText = item;
-        }
-        display.style.opacity = 1;
-    }, 200);
+    let content = '';
+    const player = players[currentPlayerIndex];
+    const partner = players[1 - currentPlayerIndex];
+
+    if (typeof item === 'object') {
+        let text = item.text.replace(/me/g, partner).replace(/I/g, partner);
+        content = `<span style="color: var(--primary-red); font-weight: bold;">${item.type}:</span><br>${text}`;
+    } else {
+        let text = item.replace(/{player}/g, player).replace(/{partner}/g, partner);
+        content = text;
+    }
+    
+    nextFace.innerHTML = content;
+    card.classList.toggle('is-flipped');
+    
+    // Update indicator
+    updateTurnIndicator();
+
+    // Broadcast if in multiplayer
+    if (isMultiplayer) {
+        broadcastState(content);
+    }
+
+    // Prepare next turn index
+    currentPlayerIndex = 1 - currentPlayerIndex;
 }
 
+// Event Listeners for new UI
+document.getElementById('create-room-btn').addEventListener('click', createRoom);
+document.getElementById('join-room-btn').addEventListener('click', joinRoom);
 document.getElementById('next-btn').addEventListener('click', nextItem);
+
+function updateTurnIndicator() {
+    const indicator = document.getElementById('turn-indicator');
+    if (indicator) {
+        indicator.innerText = `${players[currentPlayerIndex]}'s Turn`;
+    }
+}
+
+function showMenu() {
+    showView('menu-view');
+    currentGame = null;
+}
+
+function showView(viewId) {
+    document.getElementById(currentView).classList.remove('active');
+    setTimeout(() => {
+        document.getElementById(currentView).style.display = 'none';
+        document.getElementById(viewId).style.display = 'block';
+        setTimeout(() => {
+            document.getElementById(viewId).classList.add('active');
+            currentView = viewId;
+        }, 50);
+    }, 300);
+}
 
 // Initial setup
 document.getElementById('play-view').style.display = 'none';

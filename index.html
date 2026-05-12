@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Couple Games - Spark Your Connection</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="container">
@@ -22,6 +23,35 @@
         <main id="game-container">
             <!-- Menu View -->
             <section id="menu-view" class="view active">
+                <div class="player-setup">
+                    <div class="input-group">
+                        <input type="text" id="p1-name" placeholder="Name 1" value="Player 1">
+                        <span>&</span>
+                        <input type="text" id="p2-name" placeholder="Name 2" value="Player 2">
+                    </div>
+                    
+                    <div class="multiplayer-options">
+                        <div id="offline-options">
+                            <button class="secondary-btn" onclick="toggleMultiplayer(true)">Play Online (2 Devices)</button>
+                        </div>
+                        <div id="online-options" style="display: none;">
+                            <div class="room-controls">
+                                <div id="create-room-box">
+                                    <button class="secondary-btn" id="create-room-btn">Create Room</button>
+                                </div>
+                                <div id="join-room-box">
+                                    <input type="text" id="room-code-input" placeholder="Room Code">
+                                    <button class="secondary-btn" id="join-room-btn">Join</button>
+                                </div>
+                            </div>
+                            <div id="room-info" style="display: none;">
+                                <p>Room Code: <strong id="display-room-code">----</strong></p>
+                                <p id="connection-status">Waiting for partner...</p>
+                            </div>
+                            <button class="text-link" onclick="toggleMultiplayer(false)">Switch to Local Play</button>
+                        </div>
+                    </div>
+                </div>
                 <div class="game-grid">
                     <button class="game-card" onclick="startGame('truth-or-dare')">
                         <div class="card-icon">🔥</div>
@@ -52,8 +82,16 @@
                     <button class="back-btn" onclick="showMenu()">← Back</button>
                     <h2 id="game-title">Game Title</h2>
                 </div>
-                <div id="card-display" class="card">
-                    <p id="card-content">Click 'Next' to start!</p>
+                <div id="turn-indicator">Player 1's Turn</div>
+                <div class="card-container">
+                    <div id="card-display" class="card">
+                        <div class="card-face card-front">
+                            <p id="card-content">Click 'Next' to start!</p>
+                        </div>
+                        <div class="card-face card-back">
+                            <p id="card-content-back"></p>
+                        </div>
+                    </div>
                 </div>
                 <div class="game-controls">
                     <button id="next-btn" class="primary-btn">Next</button>
