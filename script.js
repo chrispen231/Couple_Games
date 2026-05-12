@@ -218,6 +218,21 @@ let roomChannel = null;
 let isMultiplayer = false;
 let currentRoomCode = null;
 
+// Audio and Haptics
+const flipSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-card-flip-607.mp3');
+flipSound.volume = 0.5;
+
+function triggerEffects() {
+    // Sound
+    flipSound.currentTime = 0;
+    flipSound.play().catch(e => console.log("Audio play blocked until interaction"));
+    
+    // Haptics (Mobile)
+    if (navigator.vibrate) {
+        navigator.vibrate(40); // Short 40ms vibration
+    }
+}
+
 const SUPABASE_URL = 'https://xysufyfzscripnkozsfa.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5c3VmeWZ6c2NyaXBua296c2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MzQzMDEsImV4cCI6MjA5NDExMDMwMX0.-lEabpLCOHVJFIyn-NsznVWwSB2K2TTCGKEvqhBVqes';
 
@@ -307,6 +322,7 @@ function syncGameState(state) {
     
     nextFace.innerHTML = state.cardContent;
     card.classList.toggle('is-flipped');
+    triggerEffects();
 
     if (currentView !== 'play-view') {
         showView('play-view');
@@ -418,6 +434,7 @@ function nextItem() {
     
     nextFace.innerHTML = content;
     card.classList.toggle('is-flipped');
+    triggerEffects();
     
     // Update indicator
     updateTurnIndicator();
