@@ -271,17 +271,5 @@ function showView(viewId) {
     }, 300);
 }
 
-// Theme Toggle
-function toggleTheme() {
-    document.body.classList.toggle('dark-mode');
-    const isDark = document.body.classList.contains('dark-mode');
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    document.getElementById('theme-toggle').innerText = isDark ? '☀️' : '🌙';
-}
-
-// Initial load for theme
-const savedTheme = localStorage.getItem('theme');
-if (savedTheme === 'dark') {
-    document.body.classList.add('dark-mode');
-    document.getElementById('theme-toggle').innerText = '☀️';
-}
+// Initial setup
+document.getElementById('play-view').style.display = 'none';
