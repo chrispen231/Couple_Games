@@ -222,6 +222,25 @@ let currentRoomCode = null;
 const flipSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-card-flip-607.mp3');
 flipSound.volume = 0.5;
 
+const bgMusic = new Audio('https://upload.wikimedia.org/wikipedia/commons/5/5e/Backbay_Lounge_%28ISRC_USUAN1700068%29.mp3');
+bgMusic.loop = true;
+bgMusic.volume = 0.3;
+let isMusicPlaying = false;
+
+function toggleMusic() {
+    const btn = document.getElementById('music-toggle');
+    if (isMusicPlaying) {
+        bgMusic.pause();
+        btn.classList.remove('active');
+        btn.innerText = '🔇';
+    } else {
+        bgMusic.play().catch(e => console.log("Music play blocked until interaction"));
+        btn.classList.add('active');
+        btn.innerText = '🎵';
+    }
+    isMusicPlaying = !isMusicPlaying;
+}
+
 function triggerEffects() {
     // Sound
     flipSound.currentTime = 0;
